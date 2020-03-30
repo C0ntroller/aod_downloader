@@ -6,6 +6,7 @@ I did this because there is [another solution](https://github.com/BreakingBread0
 * Python 3.5+
 * robobrowser
 * [this fix for robobrowser as it's currently broken](https://github.com/jmcarp/robobrowser/pull/94/files)
+* ffmpeg (installed and/or in your path)
 
 ## Usage
 Currently it's cli only and should be self-explanatory (well, if you are German atleast). You **can** store your password (just edit the py file) but theres no encryption.

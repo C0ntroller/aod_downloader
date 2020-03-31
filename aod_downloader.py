@@ -16,7 +16,7 @@ class AoDDownloader:
         self.browser.open(self.baseurl + '/users/sign_in')
         form = self.browser.get_form(action='/users/sign_in')
         if not self.__username:
-            username = input("Username: ")
+            username = input('Username: ')
         else:
             username = self.__username
         if not self.__password:
@@ -87,6 +87,8 @@ class AoDDownloader:
         return self.browser.response.json()
     
     def download_episode(self, playlist: str, title: str, usesDub: bool = False, dir_name: str = ''):
+        title = title.replace('ä','ae').replace('ö','oe').replace('ü','ue').replace('ß','ss').replace('Ä','Ae').replace('Ö','Oe').replace('Ü','Ue')
+        title = re.sub(r'[^a-zA-Z0-9 \-_\(\)&\.]','',title)
         if usesDub:
             title += ' - Dub'
         else:
@@ -98,13 +100,22 @@ class AoDDownloader:
 def get_anime_input():    
     i = 0
     a_list = aod.get_all_animes()
+    if not a_list:
+        return False
     for entry in a_list:
         if entry['movie']:
-            print(str(i) + ':\t' + entry["title"] + ' (Film)')
+            print(str(i) + ':\t' + entry['title'] + ' (Film)')
         else:
-            print(str(i) + ':\t' + entry["title"])
+            print(str(i) + ':\t' + entry['title'])
         i+=1
     a_idx = input('Wähle einen Anime zum Download: ')
+    while not re.match('^[0-9]*$',a_idx) or int(a_idx) < 0 or int(a_idx) >= i:
+        print('Gibt bitte eine Zahl, die vor einem Anime steht, ein!')
+        print('(Strg+C beendet das Programm)')        
+        a_idx = input('Wähle einen Anime zum Download: ')
+    print()
+    print('Ausgewählt: ' + a_list[int(a_idx)]['title'])
+    print()
     return a_list[int(a_idx)]
 
 def get_episode_list(animePayload: dict):
@@ -128,7 +139,7 @@ def get_episodes_input(e_list: list):
     print()
     i = 1
     for entry in e_list:
-        print(str(i) + ':\t' + entry["title"])
+        print(str(i) + ':\t' + entry['title'])
         i+=1
     i-=1
     print()
@@ -136,7 +147,7 @@ def get_episodes_input(e_list: list):
     print('h für Hilfe')
     print()
     e_select = input('Treffe deine Auswahl: ')
-    while e_select == 'h' or (not re.match("^[0-9]*-[0-9]*$",e_select) and not re.match("^[0-9]*$",e_select) and not e_select == 'a'):
+    while e_select == 'h' or (not re.match('^[0-9]*-[0-9]*$',e_select) and not re.match('^[0-9]*$',e_select) and not e_select == 'a'):
         print()
         print('Wähle Episoden aus!')
         print('h für Hilfe')
@@ -150,7 +161,7 @@ def get_episodes_input(e_list: list):
             print('"a":\tAlles runterladen')
             print()
         e_select = input('Treffe deine Auswahl: ')
-    if re.match("^[0-9]*-[0-9]*$",e_select):
+    if re.match('^[0-9]*-[0-9]*$',e_select):
         e_split = e_select.split('-')
         if int(e_split[0]) < 1 and int(e_split[1]) > i or int(e_split[0]) < 1 and int(e_split[1]) < 1 or int(e_split[0]) > i and int(e_split[1]) > i:
             print('Keine gültige Eingabe, breche ab.')
@@ -185,8 +196,8 @@ def get_episodes_input(e_list: list):
     return e_select, e_dub
 
 def download_episodes(e_list: list, e_select: str, useDub: bool, dir_name: str = ''):
-    if re.match("^[0-9]*-[0-9]*$",e_select):
-        print("Das wird eine ganze Weile brauchen... Pack das Programm einfach in den Hintergrund!")
+    if re.match('^[0-9]*-[0-9]*$',e_select):
+        print('Das wird eine ganze Weile brauchen... Pack das Programm einfach in den Hintergrund!')
         e_split = e_select.split('-')
         e_split = list(map(lambda x: int(x), e_split))
         i = -1
@@ -209,7 +220,13 @@ def download_episodes(e_list: list, e_select: str, useDub: bool, dir_name: str =
 
 def run():
     anime = get_anime_input()
+    if not anime:
+        print('Konnte keine Anime finden. Entweder AoD hat etwas geändert, oder das Programm ist kaputt.')
+        return
     e_list = get_episode_list(anime)
+    if not e_list:
+        print('Konnte keine Episoden finden. Entweder es gibt keine, oder das Programm ist kaputt.')
+        return
     if anime['movie']:
         print()
         print('Dies ist ein Film!')
@@ -217,7 +234,7 @@ def run():
         download_episodes(e_list,'1',useDub)
     else:
         e_select, useDub = get_episodes_input(e_list)
-        dir_name = re.sub(r'[^a-zA-Z0-9 ]','',anime['title'])
+        dir_name = re.sub(r'[^a-zA-Z0-9 \-_\(\)&\.]','',anime['title'])
         try:
             os.mkdir(dir_name)
             download_episodes(e_list, e_select, useDub, dir_name+'/')

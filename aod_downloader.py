@@ -95,6 +95,8 @@ class AoDDownloader:
             title += ' - Sub'
         print('Starte: ' + title + '...')
         subprocess.run(['ffmpeg','-i',playlist,'-c','copy','-loglevel','warning',dir_name+title+'.mp4'],stderr=subprocess.STDOUT)
+        # TODO
+        # In stdout nach Fehlern suchen
         print('Fertig: ' + title + '!')
 
 def get_anime_input():    

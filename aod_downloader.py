@@ -109,7 +109,7 @@ def get_anime_input():
             print(str(i) + ':\t' + entry['title'])
         i+=1
     a_idx = input('Wähle einen Anime zum Download: ')
-    while not re.match('^[0-9]*$',a_idx) or int(a_idx) < 0 or int(a_idx) >= i:
+    while not re.match('^[0-9][0-9]*$',a_idx) or int(a_idx) < 0 or int(a_idx) >= i:
         print('Gibt bitte eine Zahl, die vor einem Anime steht, ein!')
         print('(Strg+C beendet das Programm)')        
         a_idx = input('Wähle einen Anime zum Download: ')
@@ -147,7 +147,7 @@ def get_episodes_input(e_list: list):
     print('h für Hilfe')
     print()
     e_select = input('Treffe deine Auswahl: ')
-    while e_select == 'h' or (not re.match('^[0-9]*-[0-9]*$',e_select) and not re.match('^[0-9]*$',e_select) and not e_select == 'a'):
+    while e_select == 'h' or (not re.match('^[0-9][0-9]*-[0-9][0-9]*$',e_select) and not re.match('^[0-9][0-9]*-$',e_select) and not re.match('^-[0-9][0-9]*$',e_select) and not re.match('^[0-9]*$',e_select) and not e_select == 'a'):
         print()
         print('Wähle Episoden aus!')
         print('h für Hilfe')
@@ -155,30 +155,55 @@ def get_episodes_input(e_list: list):
         if(e_select == 'h'):
             print('(n und m sind Nummern)')
             print('n:\tEpisode n runterladen')
-            print('n-m:\tEpisode n bis m runterladen')
+            print('n-m:\tEpisoden n bis m runterladen')
             print('n-:\tAlles ab Episode n runterladen')
             print('-m:\tAlles bis Episode m runterladen')
             print('"a":\tAlles runterladen')
             print()
         e_select = input('Treffe deine Auswahl: ')
-    if re.match('^[0-9]*-[0-9]*$',e_select):
+    if re.match('^[0-9][0-9]*-[0-9][0-9]*$',e_select):
         e_split = e_select.split('-')
-        if int(e_split[0]) < 1 and int(e_split[1]) > i or int(e_split[0]) < 1 and int(e_split[1]) < 1 or int(e_split[0]) > i and int(e_split[1]) > i:
-            print('Keine gültige Eingabe, breche ab.')
-            exit()
-        elif int(e_split[0]) < 1:
-            print('Untere Grenze zu tief, nutze 1.')
-            e_split[0] = '1'
-        elif int(e_split[1]) > i:
-            print('Obere Grenze zu hoch, nutze ' + str(i) + '.')
-            e_split[1] = str(i)
         if int(e_split[1]) < int(e_split[0]):
             e_split[0], e_split[1] = e_split[1], e_split[0]
-        if int(e_split[1]) == int(e_split[0]):
+        if int(e_split[0]) < 1 and int(e_split[1]) < 1 or int(e_split[0]) > i and int(e_split[1]) > i:
+            print('Keine gültige Eingabe, breche ab.')
+            exit()
+        if int(e_split[0]) < 1:
+            print('Untere Grenze zu tief, nutze 1.')
+            e_split[0] = '1'
+        if int(e_split[1]) > i:
+            print('Obere Grenze zu hoch, nutze ' + str(i) + '.')
+            e_split[1] = str(i)
+        if int(e_split[0]) == int(e_split[1]):
             e_select = e_split[0]
         else:
             e_select = '-'.join(e_split)
-    if e_select == 'a':
+    elif re.match('^[0-9][0-9]*-$',e_select):
+        e_split = e_select.split('-')
+        if int(e_split[0]) < 1:
+            print('Untere Grenze zu tief, nutze 1.')
+            e_split[0] = '1'
+        elif int(e_split[0]) > i:
+            print('Keine gültige Eingabe, breche ab.')
+            exit()
+        if int(e_split[0]) == i:
+            e_select = e_split[0]
+        else:
+            e_select = e_split[0] + '-' + str(i)
+            e_select = '-'.join(e_split)
+    elif re.match('^-[0-9][0-9]*$',e_select):
+        e_split = e_select.split('-')
+        if int(e_split[1]) > i:
+            print('Obere Grenze zu hoch, nutze ' + str(i) + '.')
+            e_split[1] = str(i)
+        elif int(e_split[1]) < 1:
+            print('Keine gültige Eingabe, breche ab.')
+            exit()
+        if int(e_split[1]) == 1:
+            e_select = '1'
+        else:
+            e_select = '1-' + e_split[1]
+    elif e_select == 'a':
         e_select = '1-' + str(i)
     
     if not e_list[0]['playlist_sub']:
@@ -196,7 +221,7 @@ def get_episodes_input(e_list: list):
     return e_select, e_dub
 
 def download_episodes(e_list: list, e_select: str, useDub: bool, dir_name: str = ''):
-    if re.match('^[0-9]*-[0-9]*$',e_select):
+    if re.match('^[0-9][0-9]*-[0-9][0-9]*$',e_select):
         print('Das wird eine ganze Weile brauchen... Pack das Programm einfach in den Hintergrund!')
         e_split = e_select.split('-')
         e_split = list(map(lambda x: int(x), e_split))

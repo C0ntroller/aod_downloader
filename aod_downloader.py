@@ -3,6 +3,7 @@ from robobrowser import RoboBrowser
 from getpass import getpass
 import subprocess
 import os
+import sys
 
 
 class AoDDownloader:
@@ -103,11 +104,12 @@ class AoDDownloader:
         else:
             title += ' - Sub'
         print('Starte: ' + title + '...')
-        subprocess.run(['ffmpeg', '-i', playlist, '-c', 'copy', '-loglevel',
-                        'warning', dir_name+title+'.mp4'], stderr=subprocess.STDOUT)
-        # TODO
-        # In stdout nach Fehlern suchen
-        print('Fertig: ' + title + '!')
+        try:
+            subprocess.run(['ffmpeg', '-i', playlist, '-c', 'copy', '-loglevel',
+                            'warning', '-y', dir_name+title+'.mp4'], check=True)
+            pass
+        except:
+            print(sys.exc_info()[0])
 
 
 def get_anime_input():
@@ -163,7 +165,7 @@ def get_episodes_input(e_list: list):
     print('h für Hilfe')
     print()
     e_select = input('Treffe deine Auswahl: ')
-    while e_select == 'h' or (not re.match('^[0-9][0-9]*-[0-9][0-9]*$', e_select) and not re.match('^[0-9][0-9]*-$', e_select) and not re.match('^-[0-9][0-9]*$', e_select) and not re.match('^[0-9]*$', e_select) and not e_select == 'a'):
+    while e_select == 'h' or (not re.match('^[0-9][0-9]*-[0-9][0-9]*$', e_select) and not re.match('^[0-9][0-9]*-$', e_select) and not re.match('^-[0-9][0-9]*$', e_select) and not re.match('^[0-9][0-9]*$', e_select) and not e_select == 'a'):
         print()
         print('Wähle Episoden aus!')
         print('h für Hilfe')
@@ -206,7 +208,6 @@ def get_episodes_input(e_list: list):
             e_select = e_split[0]
         else:
             e_select = e_split[0] + '-' + str(i)
-            e_select = '-'.join(e_split)
     elif re.match('^-[0-9][0-9]*$', e_select):
         e_split = e_select.split('-')
         if int(e_split[1]) > i:
@@ -244,13 +245,13 @@ def download_episodes(e_list: list, e_select: str, useDub: bool, dir_name: str =
         e_split = list(map(lambda x: int(x), e_split))
         i = -1
         if useDub:
-            for file_link in aod.get_multi_episodes_playlists(e_list[e_split[0]]['playlist_dub'], e_split[1]-e_split[0]):
+            for file_link in aod.get_multi_episodes_playlists(e_list[e_split[0]-1]['playlist_dub'], e_split[1]-e_split[0]):
                 aod.download_episode(
                     file_link, e_list[e_split[0]+i]['title'], useDub, dir_name)
                 i += 1
             return
         else:
-            for file_link in aod.get_multi_episodes_playlists(e_list[e_split[0]]['playlist_sub'], e_split[1]-e_split[0]):
+            for file_link in aod.get_multi_episodes_playlists(e_list[e_split[0]-1]['playlist_sub'], e_split[1]-e_split[0]):
                 aod.download_episode(
                     file_link, e_list[e_split[0]+i]['title'], useDub, dir_name)
                 i += 1
